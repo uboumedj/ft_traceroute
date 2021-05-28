@@ -28,6 +28,7 @@
 # define M_FLAG				0b00001000
 # define Q_FLAG				0b00010000
 # define Z_FLAG				0b00100000
+# define N_FLAG				0b01000000
 
 /*
 ** ERROR MESSAGE DEFINES
@@ -45,9 +46,9 @@
 # define TIMEOFDAY_ERROR	"ft_traceroute: gettimeofday: error while trying to access current time"
 # define SENDTO_ERROR		"ft_traceroute: sendto: error while trying to send packet"
 # define NO_CONNEXION_ERROR	"ft_traceroute: sendto: the network is unreachable"
-# define RECV_ERROR			"ft_traceroute: recvmsg: error while trying to access ICMP reply"
+# define RECV_ERROR			"ft_traceroute: recvfrom: error while trying to access ICMP reply"
 # define REPLY_ERROR		"ft_traceroute: reply is not what was expected (not ICMP)"
-# define TIMEOUT_ERROR		"ft_traceroute: recvmsg: request timed out"
+# define TIMEOUT_ERROR		"ft_traceroute: recvfrom: request timed out"
 
 /*
 ** FUNCTION RETURN DEFINES

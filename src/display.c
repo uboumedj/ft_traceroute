@@ -55,16 +55,21 @@ void	display_hop_address(t_reply reply)
 	inet_ntop(AF_INET, &(packet_content->ip_src), ip, INET_ADDRSTRLEN);
 	if (ft_strcmp(ip, "0.0.0.0"))
 	{
-		tmp_sockaddr.sin_addr = packet_content->ip_src;
-		tmp_sockaddr.sin_family = AF_INET;
-		tmp_sockaddr.sin_port = 0;
-		if (getnameinfo((struct sockaddr *)&tmp_sockaddr, sizeof(struct sockaddr_in),
-			hostname, sizeof(hostname), NULL, 0, NI_NAMEREQD) >= 0)
-		{
-			printf(" %s (%s)", hostname, ip);
-		}
+		if (traceroute.flags & N_FLAG)
+			printf(" %s", ip);
 		else
-			printf(" %s (%s)", ip, ip);
+		{
+			tmp_sockaddr.sin_addr = packet_content->ip_src;
+			tmp_sockaddr.sin_family = AF_INET;
+			tmp_sockaddr.sin_port = 0;
+			if (getnameinfo((struct sockaddr *)&tmp_sockaddr, sizeof(struct sockaddr_in),
+				hostname, sizeof(hostname), NULL, 0, NI_NAMEREQD) >= 0)
+			{
+				printf(" %s (%s)", hostname, ip);
+			}
+			else
+				printf(" %s (%s)", ip, ip);
+		}
 	}
 }
 

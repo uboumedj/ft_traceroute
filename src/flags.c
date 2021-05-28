@@ -62,6 +62,11 @@ void	store_flags(int *flags, char **argv, int index)
 				*flags |= Z_FLAG;
 				get_interval(argv, index);
 				break;
+			case 'n':
+				*flags |= N_FLAG;
+				break;
+			case 'I':
+				break;
 			default:
 				*flags |= BAD_FLAG;
 				fprintf(stderr, BAD_FLAG_ERROR, argv[index][i]);
