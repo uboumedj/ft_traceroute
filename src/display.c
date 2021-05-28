@@ -17,12 +17,12 @@ void	display_header(void)
 }
 
 /*
-** function: display_hop_start
-** ---------------------------
-** called in the loop to display the information about beginning of a hop (number, router name and IP)
+** function: display_query
+** -----------------------
+** displays the current query's information or '*' if the query encountered and error (usually a timeout)
 */
 
-void	display_full_hop(int check, char *address_is_displayed, t_reply reply, struct timeval start, struct timeval end)
+void	display_query(int check, char *address_is_displayed, t_reply reply, struct timeval start, struct timeval end)
 {
 	if (check != ERROR_CODE)
 	{
@@ -31,20 +31,16 @@ void	display_full_hop(int check, char *address_is_displayed, t_reply reply, stru
 			*address_is_displayed = 1;
 			display_hop_address(reply);
 		}
-		traceroute.received_packets++;
 		display_time(start, end);
 	}
 	else
-	{
 		printf(" *");
-		traceroute.error_packets++;
-	}
 }
 
 /*
 ** function: display_hop_address
 ** -----------------------------
-** called in the loop to display the information about beginning of a hop (number, router name and IP)
+** called in the loop to display the current hop's router name and IP when it is found
 */
 
 void	display_hop_address(t_reply reply)
@@ -67,16 +63,14 @@ void	display_hop_address(t_reply reply)
 			printf(" %s (%s)", hostname, ip);
 		}
 		else
-		{
 			printf(" %s (%s)", ip, ip);
-		}
 	}
 }
 
 /*
 ** function: display_time
 ** ----------------------
-** called in the loop to display the information about beginning of a hop (number, router name and IP)
+** displays the current query's round trip time
 */
 
 void	display_time(struct timeval start, struct timeval end)
@@ -85,36 +79,6 @@ void	display_time(struct timeval start, struct timeval end)
 
 	elapsed_time = calculate_elapsed_time(start, end);
 	printf("  %.3lf ms", elapsed_time);
-}
-
-/*
-** function: display_exceeded_sequence
-** -----------------------------------
-** displays information on a failed seq due to an exceeded TTL, i.e. the address where the packet
-** stopped and its seq
-*/
-
-void	display_exceeded_sequence(t_reply reply)
-{
-	struct ip			*packet_content;
-	char				ip[INET_ADDRSTRLEN];
-	char				hostname[NI_MAXHOST];
-	struct sockaddr_in	tmp_sockaddr;
-
-	packet_content = (struct ip *)reply.receive_buffer;
-	inet_ntop(AF_INET, &(packet_content->ip_src), ip, INET_ADDRSTRLEN);
-	tmp_sockaddr.sin_addr = packet_content->ip_src;
-	tmp_sockaddr.sin_family = AF_INET;
-	tmp_sockaddr.sin_port = 0;
-	if (getnameinfo((struct sockaddr *)&tmp_sockaddr, sizeof(struct sockaddr_in),
-		hostname, sizeof(hostname), NULL, 0, NI_NAMEREQD) >= 0)
-	{
-		printf("From %s (%s): icmp_seq=%d Time to live exceeded\n", hostname, ip, traceroute.seq);
-	}
-	else
-	{
-		printf("From %s: icmp_seq=%d Time to live exceeded\n", ip, traceroute.seq);
-	}
 }
 
 /*

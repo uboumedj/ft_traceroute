@@ -51,18 +51,6 @@ unsigned short	checksum(void *address, int len)
 }
 
 /*
-** function: initialise_reply
-** --------------------------
-** initialises the different parts of the t_reply structure that will be used to
-** store the destination IP's response to our sent packet.
-*/
-
-void			initialise_reply(t_reply *reply)
-{
-	ft_bzero(reply, sizeof(t_reply));
-}
-
-/*
 ** function: send_packet
 ** ---------------------
 ** sends packets to the destination address and handles various errors encountered
@@ -90,11 +78,12 @@ char			send_packet(t_packet *packet)
 ** function: receive_reply
 ** -----------------------
 ** stores the response inside the reply structure, and handles the various errors
-** encountered by the recvmsg function
+** encountered by the recvfrom function
 */
 
 char			receive_reply(t_reply *reply)
 {
+	ft_bzero(reply, sizeof(t_reply));
 	reply->received_bytes = recvfrom(traceroute.socket_fd, reply->receive_buffer, sizeof(reply->receive_buffer), 0, NULL, NULL);
 	if (reply->received_bytes > 0)
 	{
@@ -117,7 +106,8 @@ char			receive_reply(t_reply *reply)
 /*
 ** function: check_reply
 ** ---------------------
-** reads the content of the response packet to check that it is what was expected
+** reads the content of the response packet to verify that it is what was expected
+** i.e. the right protocol, ID and seq number
 */
 
 char			check_reply(t_reply *reply)
@@ -136,14 +126,12 @@ char			check_reply(t_reply *reply)
 		tmp_icmp_part = (struct icmp *)(reply->icmp + 1);
 		if (BSWAP16(tmp_icmp_part->icmp_id) != traceroute.process_id || BSWAP16(tmp_icmp_part->icmp_seq) != traceroute.seq)
 		{
-			initialise_reply(reply);
 			return (receive_reply(reply));
 		}
 		return (TTL_EXCEEDED_CODE);
 	}
 	else if (BSWAP16(reply->icmp->icmp_id) != traceroute.process_id || BSWAP16(reply->icmp->icmp_seq) != traceroute.seq)
 	{
-		initialise_reply(reply);
 		return (receive_reply(reply));
 	}
 	return (SUCCESS_CODE);
@@ -193,16 +181,14 @@ void			loop_single_hop(void)
 	{
 		save_current_time(&current_start_timestamp);
 		initialise_packet(&packet, current_start_timestamp);
-		traceroute.sent_packets++;
 		check = send_packet(&packet);
 		if (check == SUCCESS_CODE)
 		{
-			initialise_reply(&reply);
 			check = receive_reply(&reply);
 			save_current_time(&current_ending_timestamp);
 			if (check == SUCCESS_CODE)
 				traceroute.reached = 1;
-			display_full_hop(check, &address_is_displayed, reply, current_start_timestamp, current_ending_timestamp);
+			display_query(check, &address_is_displayed, reply, current_start_timestamp, current_ending_timestamp);
 		}
 		count--;
 		traceroute.seq++;

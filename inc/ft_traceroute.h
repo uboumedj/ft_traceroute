@@ -74,7 +74,6 @@ typedef struct				s_reply
 	int						received_bytes;
 	struct icmp				*icmp;
 	char					receive_buffer[84];
-	char					control[CMSG_SPACE(sizeof(int))];
 }							t_reply;
 
 typedef struct				s_traceroute
@@ -90,9 +89,6 @@ typedef struct				s_traceroute
 	int						count;
 	pid_t					process_id;
 	int						socket_fd;
-	int						sent_packets;
-	int						received_packets;
-	int						error_packets;
 	int						seq;
 	struct sockaddr_in		sockaddr;
 	struct timeval			starting_time;
@@ -103,7 +99,7 @@ typedef struct				s_traceroute
 ** GLOBAL VARIABLE
 */
 
-t_traceroute						traceroute;
+t_traceroute				traceroute;
 
 /*
 ** PROGRAM INITIALISING
@@ -130,7 +126,6 @@ void						main_loop(void);
 void						loop_single_hop(void);
 void						initialise_packet(struct s_packet *packet, struct timeval current_time);
 char						send_packet(t_packet *packet);
-void						initialise_reply(t_reply *reply);
 char						receive_reply(t_reply *reply);
 char						check_reply(t_reply *replys);
 void						wait_interval(struct timeval start);
@@ -157,10 +152,9 @@ size_t						ft_strlen(const char *str);
 */
 
 void						display_header(void);
-void						display_full_hop(int check, char *address_is_displayed, t_reply reply, struct timeval start, struct timeval end);
+void						display_query(int check, char *address_is_displayed, t_reply reply, struct timeval start, struct timeval end);
 void						display_hop_address(t_reply reply);
 void						display_time(struct timeval start, struct timeval end);
-void						display_exceeded_sequence(t_reply reply);
 void						error_output(char *message);
 void						error_output_and_exit(char *message);
 

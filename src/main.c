@@ -23,9 +23,6 @@ void	initialise_parameters(char **argv)
 	{
 		traceroute.process_id = getpid();
 		traceroute.seq = 1;
-		traceroute.sent_packets = 0;
-		traceroute.received_packets = 0;
-		traceroute.error_packets = 0;
 		traceroute.socket_fd = -1;
 		traceroute.reached = 0;
 		get_address(&(traceroute.user_requested_address), argv);
