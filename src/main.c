@@ -11,7 +11,7 @@ void	initialise_parameters(char **argv)
 {
 	traceroute.ttl = 1;
 	traceroute.hops = 30;
-	traceroute.interval = 1;
+	traceroute.interval = 0;
 	traceroute.count = 3;
 	traceroute.flags = parse_flags(argv);
 	if (traceroute.flags & H_FLAG || traceroute.flags & BAD_FLAG)

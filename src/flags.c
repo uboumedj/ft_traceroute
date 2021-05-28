@@ -50,13 +50,17 @@ void	store_flags(int *flags, char **argv, int index)
 				*flags |= M_FLAG;
 				get_hops(argv, index);
 				break;
-			case 't':
-				*flags |= T_FLAG;
+			case 'f':
+				*flags |= F_FLAG;
 				get_ttl(argv, index);
 				break;
 			case 'q':
 				*flags |= Q_FLAG;
 				get_queries(argv, index);
+				break;
+			case 'z':
+				*flags |= Z_FLAG;
+				get_interval(argv, index);
 				break;
 			default:
 				*flags |= BAD_FLAG;
@@ -78,7 +82,7 @@ void	get_ttl(char **argv, int index)
 {
 	int		ttl;
 
-	if ((argv[index][1] == 't' && argv[index][2] == 0)
+	if ((argv[index][1] == 'f' && argv[index][2] == 0)
 		&& (argv[index + 1] != NULL))
 	{
 		ttl = atoi(argv[index + 1]);
@@ -124,12 +128,36 @@ void	get_hops(char **argv, int index)
 
 void	get_queries(char **argv, int index)
 {
-	double	interval;
+	char count;
 
-	if ((argv[index][1] == 'i' && argv[index][2] == 0)
+	if ((argv[index][1] == 'q' && argv[index][2] == 0)
 		&& (argv[index + 1] != NULL))
 	{
-		interval = atof(argv[index + 1]);
+		count = atoi(argv[index + 1]);
+		if (count > 0 && count <= 10)
+		{
+			traceroute.count = count;
+			return;
+		}
+	}
+	error_output_and_exit(BAD_QUERIES_ERROR);
+}
+
+/*
+** function: get_interval
+** ---------------------
+** parses the next argument after a -z option to get the interval that the user inputs,
+** checking for errors along the way
+*/
+
+void	get_interval(char **argv, int index)
+{
+	char interval;
+
+	if ((argv[index][1] == 'z' && argv[index][2] == 0)
+		&& (argv[index + 1] != NULL))
+	{
+		interval = atoi(argv[index + 1]);
 		if (interval > 0 && interval <= 10)
 		{
 			traceroute.interval = interval;

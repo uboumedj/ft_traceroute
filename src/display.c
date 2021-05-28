@@ -35,6 +35,7 @@ void	display_query(int check, char *address_is_displayed, t_reply reply, struct 
 	}
 	else
 		printf(" *");
+	fflush(stdout);
 }
 
 /*

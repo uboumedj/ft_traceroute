@@ -192,6 +192,8 @@ void			loop_single_hop(void)
 		}
 		count--;
 		traceroute.seq++;
+		if (traceroute.interval)
+			wait_interval(current_start_timestamp);
 	}
 	printf("\n");
 }

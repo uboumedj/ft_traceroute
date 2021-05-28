@@ -24,17 +24,18 @@
 # define BAD_FLAG			0b10000000
 # define V_FLAG				0b00000001
 # define H_FLAG				0b00000010
-# define T_FLAG				0b00000100
+# define F_FLAG				0b00000100
 # define M_FLAG				0b00001000
 # define Q_FLAG				0b00010000
+# define Z_FLAG				0b00100000
 
 /*
 ** ERROR MESSAGE DEFINES
 */
 
-# define USAGE				"Usage: ft_traceroute [-h help] [-m max hops] destination"
+# define USAGE				"Usage: ft_traceroute [-h help] [-m max hops] [-f first ttl] [-q queries per hop] [-z interval between queries] destination"
 # define BAD_FLAG_ERROR		"ft_traceroute: invalid option -- '%c'\n"
-# define BAD_TTL_ERROR		"ft_traceroute: can't set time to live: invalid argument"
+# define BAD_TTL_ERROR		"ft_traceroute: can't set time to live: first hop out of range"
 # define BAD_COUNT_ERROR	"ft_traceroute: max hops cannot be more than 255"
 # define BAD_QUERIES_ERROR	"ft_traceroute: number of probes per hop has to be between 1 and 10"
 # define PERMISSION_ERROR	"ft_traceroute: socket: operation not permitted"
@@ -79,14 +80,14 @@ typedef struct				s_reply
 typedef struct				s_traceroute
 {
 	int						flags;
-	double					interval;
+	char					interval;
 	char					*user_requested_address;
 	char					*address;
 	char					*reversed_address;
 	char					reached;
 	int						ttl;
 	char					hops;
-	int						count;
+	char					count;
 	pid_t					process_id;
 	int						socket_fd;
 	int						seq;
@@ -110,7 +111,7 @@ int							parse_flags(char **argv);
 void						get_ttl(char **argv, int index);
 void						get_hops(char **argv, int index);
 void						get_queries(char **argv, int index);
-void						handle_flood(int flags);
+void						get_interval(char **argv, int index);
 void						store_flags(int *flags, char **argv, int i);
 void						get_address(char **dest, char **argv);
 char						check_previous_argument(char **argv, int i);

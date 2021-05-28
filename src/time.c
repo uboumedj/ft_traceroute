@@ -7,8 +7,8 @@
 /*
 ** function: wait_interval
 ** -----------------------
-** used in the program's loop, to ensure there's at least [traceroute.interval] seconds
-** between each sent packet. Default interval is 1 second
+** used in the program's loop, if there's a -z flag, to ensure there's at least
+** [traceroute.interval] seconds between each sent packet
 */
 
 void			wait_interval(struct timeval start)
