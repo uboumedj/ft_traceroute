@@ -10,8 +10,9 @@
 void	initialise_parameters(char **argv)
 {
 	traceroute.ttl = 1;
-	traceroute.count = 30;
+	traceroute.hops = 30;
 	traceroute.interval = 1;
+	traceroute.count = 3;
 	traceroute.flags = parse_flags(argv);
 	if (traceroute.flags & H_FLAG || traceroute.flags & BAD_FLAG)
 	{
@@ -26,6 +27,7 @@ void	initialise_parameters(char **argv)
 		traceroute.received_packets = 0;
 		traceroute.error_packets = 0;
 		traceroute.socket_fd = -1;
+		traceroute.reached = 0;
 		get_address(&(traceroute.user_requested_address), argv);
 		interpret_address(traceroute.user_requested_address);
 	}
@@ -64,7 +66,7 @@ int		main(int argc, char **argv)
 		{
 			set_signals();
 			display_header();
-			packet_loop();
+			main_loop();
 		}
 		free_memory();
 	}

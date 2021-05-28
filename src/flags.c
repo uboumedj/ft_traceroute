@@ -46,21 +46,17 @@ void	store_flags(int *flags, char **argv, int index)
 			case 'h':
 				*flags |= H_FLAG;
 				break;
-			case 'c':
-				*flags |= C_FLAG;
-				get_count(argv, index);
+			case 'm':
+				*flags |= M_FLAG;
+				get_hops(argv, index);
 				break;
 			case 't':
 				*flags |= T_FLAG;
 				get_ttl(argv, index);
 				break;
-			case 'i':
-				*flags |= I_FLAG;
-				get_interval(argv, index);
-				break;
-			case 'f':
-				*flags |= F_FLAG;
-				handle_flood(*flags);
+			case 'q':
+				*flags |= Q_FLAG;
+				get_queries(argv, index);
 				break;
 			default:
 				*flags |= BAD_FLAG;
@@ -96,23 +92,23 @@ void	get_ttl(char **argv, int index)
 }
 
 /*
-** function: get_count
-** -------------------
-** parses the next argument after a -c option to get the packet count that the user inputs,
+** function: get_hops
+** ------------------
+** parses the next argument after a -m option to get the max hops that the user inputs,
 ** checking for errors along the way
 */
 
-void	get_count(char **argv, int index)
+void	get_hops(char **argv, int index)
 {
 	long	count;
 
-	if ((argv[index][1] == 'c' && argv[index][2] == 0)
+	if ((argv[index][1] == 'm' && argv[index][2] == 0)
 		&& (argv[index + 1] != NULL))
 	{
 		count = atol(argv[index + 1]);
-		if (count > 0 && count <= INT32_MAX)
+		if (count > 0 && count <= 255)
 		{
-			traceroute.count = (int)count;
+			traceroute.hops = (int)count;
 			return;
 		}
 	}
@@ -120,13 +116,13 @@ void	get_count(char **argv, int index)
 }
 
 /*
-** function: get_interval
-** ----------------------
-** parses the next argument after a -i option to get the interval that the user inputs,
+** function: get_queries
+** ---------------------
+** parses the next argument after a -q option to get the number of queries that the user inputs,
 ** checking for errors along the way
 */
 
-void	get_interval(char **argv, int index)
+void	get_queries(char **argv, int index)
 {
 	double	interval;
 
@@ -134,24 +130,11 @@ void	get_interval(char **argv, int index)
 		&& (argv[index + 1] != NULL))
 	{
 		interval = atof(argv[index + 1]);
-		if (interval >= 0 && interval <= 2147483)
+		if (interval > 0 && interval <= 10)
 		{
 			traceroute.interval = interval;
 			return;
 		}
 	}
-	error_output_and_exit(BAD_INTERVAL_ERROR);
-}
-
-/*
-** function: handle_flood
-** ----------------------
-** used during the -f option, makes sure that the interval is set to 0 only if there wasn't
-** a previous -i option setting the interval
-*/
-
-void	handle_flood(int flags)
-{
-	if (!(flags & I_FLAG))
-		traceroute.interval = 0;
+	error_output_and_exit(BAD_QUERIES_ERROR);
 }

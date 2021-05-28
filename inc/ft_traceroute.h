@@ -16,7 +16,6 @@
 # include <netinet/ip_icmp.h>
 # include <errno.h>
 # include <math.h>
-# include "../libft/inc/libft.h"
 
 /*
 ** OPTION FLAG DEFINES
@@ -26,19 +25,18 @@
 # define V_FLAG				0b00000001
 # define H_FLAG				0b00000010
 # define T_FLAG				0b00000100
-# define C_FLAG				0b00001000
-# define I_FLAG				0b00010000
-# define F_FLAG				0b00100000
+# define M_FLAG				0b00001000
+# define Q_FLAG				0b00010000
 
 /*
 ** ERROR MESSAGE DEFINES
 */
 
-# define USAGE				"Usage: ft_traceroute [-h help] destination"
+# define USAGE				"Usage: ft_traceroute [-h help] [-m max hops] destination"
 # define BAD_FLAG_ERROR		"ft_traceroute: invalid option -- '%c'\n"
 # define BAD_TTL_ERROR		"ft_traceroute: can't set time to live: invalid argument"
-# define BAD_COUNT_ERROR	"ft_traceroute: bad number of packets to transmit"
-# define BAD_INTERVAL_ERROR	"ft_traceroute: bad timing interval"
+# define BAD_COUNT_ERROR	"ft_traceroute: max hops cannot be more than 255"
+# define BAD_QUERIES_ERROR	"ft_traceroute: number of probes per hop has to be between 1 and 10"
 # define PERMISSION_ERROR	"ft_traceroute: socket: operation not permitted"
 # define UNKNOWN_ADDR_ERROR	"ft_traceroute: %s: failure in name resolution\n"
 # define SOCKET_ERROR		"ft_traceroute: socket: operation not permitted"
@@ -74,8 +72,6 @@ typedef struct				s_packet
 typedef struct				s_reply
 {
 	int						received_bytes;
-	struct msghdr			msghdr;
-	struct iovec			iov;
 	struct icmp				*icmp;
 	char					receive_buffer[84];
 	char					control[CMSG_SPACE(sizeof(int))];
@@ -88,7 +84,9 @@ typedef struct				s_traceroute
 	char					*user_requested_address;
 	char					*address;
 	char					*reversed_address;
+	char					reached;
 	int						ttl;
+	char					hops;
 	int						count;
 	pid_t					process_id;
 	int						socket_fd;
@@ -114,8 +112,8 @@ t_traceroute						traceroute;
 void						initialise_parameters(char **argv);
 int							parse_flags(char **argv);
 void						get_ttl(char **argv, int index);
-void						get_count(char **argv, int index);
-void						get_interval(char **argv, int index);
+void						get_hops(char **argv, int index);
+void						get_queries(char **argv, int index);
 void						handle_flood(int flags);
 void						store_flags(int *flags, char **argv, int i);
 void						get_address(char **dest, char **argv);
@@ -128,7 +126,8 @@ void						create_socket(void);
 ** LOOP
 */
 
-void						packet_loop(void);
+void						main_loop(void);
+void						loop_single_hop(void);
 void						initialise_packet(struct s_packet *packet, struct timeval current_time);
 char						send_packet(t_packet *packet);
 void						initialise_reply(t_reply *reply);
@@ -146,14 +145,21 @@ void						free_memory(void);
 double						calculate_elapsed_time(struct timeval start, struct timeval end);
 void						set_signals(void);
 void						handle_interrupt_signal(int signal);
-void						handle_alarm_signal(int signal);
+int							ft_strcmp(const char *s1, const char *s2);
+void						*ft_memset(void *ptr, int value, size_t len);
+void						ft_bzero(void *s, size_t n);
+void						*ft_memcpy(void *dest, const void *src, size_t len);
+char						*ft_strdup(const char *s);
+size_t						ft_strlen(const char *str);
 
 /*
 ** DISPLAY FUNCTIONS
 */
 
 void						display_header(void);
-void						display_sequence(int received_bytes, t_reply reply, struct timeval start_timestamp, struct timeval end_timestamp);
+void						display_full_hop(int check, char *address_is_displayed, t_reply reply, struct timeval start, struct timeval end);
+void						display_hop_address(t_reply reply);
+void						display_time(struct timeval start, struct timeval end);
 void						display_exceeded_sequence(t_reply reply);
 void						error_output(char *message);
 void						error_output_and_exit(char *message);

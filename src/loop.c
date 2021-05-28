@@ -60,13 +60,6 @@ unsigned short	checksum(void *address, int len)
 void			initialise_reply(t_reply *reply)
 {
 	ft_bzero(reply, sizeof(t_reply));
-	reply->iov.iov_base = reply->receive_buffer;
-	reply->iov.iov_len = sizeof(reply->receive_buffer);
-	reply->msghdr.msg_name = traceroute.address;
-	reply->msghdr.msg_iov = &reply->iov;
-	reply->msghdr.msg_iovlen = 1;
-	reply->msghdr.msg_control = &reply->control;
-	reply->msghdr.msg_controllen = sizeof(reply->control);
 }
 
 /*
@@ -90,11 +83,6 @@ char			send_packet(t_packet *packet)
 			error_output(SENDTO_ERROR);
 		return (ERROR_CODE);
 	}
-	if (traceroute.flags & F_FLAG)
-	{
-		ft_putchar('.');
-		fflush(stdout);
-	}
 	return (SUCCESS_CODE);
 }
 
@@ -107,7 +95,7 @@ char			send_packet(t_packet *packet)
 
 char			receive_reply(t_reply *reply)
 {
-	reply->received_bytes = recvmsg(traceroute.socket_fd, &(reply->msghdr), 0);
+	reply->received_bytes = recvfrom(traceroute.socket_fd, reply->receive_buffer, sizeof(reply->receive_buffer), 0, NULL, NULL);
 	if (reply->received_bytes > 0)
 	{
 		return (check_reply(reply));
@@ -135,17 +123,22 @@ char			receive_reply(t_reply *reply)
 char			check_reply(t_reply *reply)
 {
 	struct ip	*packet_content;
+	struct icmp *tmp_icmp_part;
 
 	packet_content = (struct ip *)reply->receive_buffer;
 	if (packet_content->ip_p != IPPROTO_ICMP)
 	{
-		if (traceroute.flags & V_FLAG)
-			error_output(REPLY_ERROR);
 		return (ERROR_CODE);
 	}
 	reply->icmp = (struct icmp *)(reply->receive_buffer + (packet_content->ip_hl << 2));
 	if (reply->icmp->icmp_type == 11 && reply->icmp->icmp_code == 0)
 	{
+		tmp_icmp_part = (struct icmp *)(reply->icmp + 1);
+		if (BSWAP16(tmp_icmp_part->icmp_id) != traceroute.process_id || BSWAP16(tmp_icmp_part->icmp_seq) != traceroute.seq)
+		{
+			initialise_reply(reply);
+			return (receive_reply(reply));
+		}
 		return (TTL_EXCEEDED_CODE);
 	}
 	else if (BSWAP16(reply->icmp->icmp_id) != traceroute.process_id || BSWAP16(reply->icmp->icmp_seq) != traceroute.seq)
@@ -157,22 +150,46 @@ char			check_reply(t_reply *reply)
 }
 
 /*
-** function: packet_loop
-** ---------------------
-** loop function to send packets to the destination address and wait for a response, repeatedly,
-** until either encountering a program-stopping error or a CTRL-C
+** function: main_loop
+** -------------------
+** main loop function that iterates on each "TTL" until it reaches the desired address or
+** it goes above the number of hops specified by the user
 */
 
-void			packet_loop(void)
+void			main_loop(void)
 {
-	t_packet			packet;
+	save_current_time(&traceroute.starting_time);
+	while(!traceroute.reached && traceroute.hops > 0)
+	{
+		loop_single_hop();
+		traceroute.ttl++;
+		if ((setsockopt(traceroute.socket_fd, IPPROTO_IP, IP_TTL, &(traceroute.ttl), sizeof(traceroute.ttl))) == -1)
+			error_output_and_exit(SETSOCKOPT_ERROR);
+		traceroute.hops--;
+	}
+}
+
+/*
+** function: loop_single_hop
+** -------------------------
+** secondary loop, called by the main_loop at each TTL. Sends [count] packets
+** to the address reached when the current TTL is exceeded
+*/
+
+void			loop_single_hop(void)
+{
+	int					count;
 	struct timeval		current_start_timestamp;
 	struct timeval		current_ending_timestamp;
+	t_packet			packet;
 	t_reply				reply;
 	char				check;
+	char				address_is_displayed;
 
-	save_current_time(&traceroute.starting_time);
-	while(1)
+	count = traceroute.count;
+	address_is_displayed = 0;
+	printf("%2u ", traceroute.ttl);
+	while (count > 0)
 	{
 		save_current_time(&current_start_timestamp);
 		initialise_packet(&packet, current_start_timestamp);
@@ -182,25 +199,13 @@ void			packet_loop(void)
 		{
 			initialise_reply(&reply);
 			check = receive_reply(&reply);
+			save_current_time(&current_ending_timestamp);
 			if (check == SUCCESS_CODE)
-			{
-				traceroute.received_packets++;
-				save_current_time(&current_ending_timestamp);
-				display_sequence(reply.received_bytes, reply, current_start_timestamp, current_ending_timestamp);;
-			}
-			else if (check == TTL_EXCEEDED_CODE)
-			{
-				display_exceeded_sequence(reply);
-				traceroute.error_packets++;
-			}
+				traceroute.reached = 1;
+			display_full_hop(check, &address_is_displayed, reply, current_start_timestamp, current_ending_timestamp);
 		}
+		count--;
 		traceroute.seq++;
-		if (traceroute.count)
-		{
-			traceroute.count--;
-			if (traceroute.count == 0)
-				break;
-		}
-		wait_interval(current_start_timestamp);
 	}
+	printf("\n");
 }

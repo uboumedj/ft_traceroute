@@ -12,43 +12,79 @@
 
 void	display_header(void)
 {
-	printf("traceroute to %s (%s), %d hops max, 60 byte packets\n", traceroute.user_requested_address, traceroute.address, traceroute.count);
+	printf("traceroute to %s (%s), %d hops max, 60 byte packets\n", traceroute.user_requested_address,
+		traceroute.address, traceroute.hops);
 }
 
 /*
-** function: display_sequence
-** --------------------------
-** called in the loop to display the current sequence's information after succesfully
-** "pinging" the address. prints the sequence number, the packet's ttl and the calculated latency
+** function: display_hop_start
+** ---------------------------
+** called in the loop to display the information about beginning of a hop (number, router name and IP)
 */
 
-void	display_sequence(int received_bytes, t_reply reply, struct timeval start_timestamp, struct timeval end_timestamp)
+void	display_full_hop(int check, char *address_is_displayed, t_reply reply, struct timeval start, struct timeval end)
 {
-	short		reply_ttl;
-	double		time_elapsed;
-	struct ip	*packet_content;
-
-	packet_content = (struct ip *)reply.receive_buffer;
-	reply_ttl = (short)packet_content->ip_ttl;
-	time_elapsed = calculate_elapsed_time(start_timestamp, end_timestamp);
-	if (!(traceroute.flags & F_FLAG))
+	if (check != ERROR_CODE)
 	{
-		if (ft_strcmp(traceroute.address, traceroute.user_requested_address))
+		if (!*address_is_displayed)
 		{
-			printf("%lu bytes from %s (%s): icmp_seq=%d ttl=%d time=%.2lf ms\n", received_bytes - sizeof(struct ip),
-				traceroute.reversed_address, traceroute.address, traceroute.seq, reply_ttl, time_elapsed);
+			*address_is_displayed = 1;
+			display_hop_address(reply);
 		}
-		else
-		{
-			printf("%lu bytes from %s: icmp_seq=%d ttl=%d time=%.2lf ms\n", received_bytes - sizeof(struct ip),
-				traceroute.address, traceroute.seq, reply_ttl, time_elapsed);
-		}
+		traceroute.received_packets++;
+		display_time(start, end);
 	}
 	else
 	{
-		ft_putchar('\b');
-		fflush(stdout);
+		printf(" *");
+		traceroute.error_packets++;
 	}
+}
+
+/*
+** function: display_hop_address
+** -----------------------------
+** called in the loop to display the information about beginning of a hop (number, router name and IP)
+*/
+
+void	display_hop_address(t_reply reply)
+{
+	struct ip			*packet_content;
+	char				ip[INET_ADDRSTRLEN];
+	char				hostname[NI_MAXHOST];
+	struct sockaddr_in	tmp_sockaddr;
+
+	packet_content = (struct ip *)reply.receive_buffer;
+	inet_ntop(AF_INET, &(packet_content->ip_src), ip, INET_ADDRSTRLEN);
+	if (ft_strcmp(ip, "0.0.0.0"))
+	{
+		tmp_sockaddr.sin_addr = packet_content->ip_src;
+		tmp_sockaddr.sin_family = AF_INET;
+		tmp_sockaddr.sin_port = 0;
+		if (getnameinfo((struct sockaddr *)&tmp_sockaddr, sizeof(struct sockaddr_in),
+			hostname, sizeof(hostname), NULL, 0, NI_NAMEREQD) >= 0)
+		{
+			printf(" %s (%s)", hostname, ip);
+		}
+		else
+		{
+			printf(" %s (%s)", ip, ip);
+		}
+	}
+}
+
+/*
+** function: display_time
+** ----------------------
+** called in the loop to display the information about beginning of a hop (number, router name and IP)
+*/
+
+void	display_time(struct timeval start, struct timeval end)
+{
+	double	elapsed_time;
+
+	elapsed_time = calculate_elapsed_time(start, end);
+	printf("  %.3lf ms", elapsed_time);
 }
 
 /*
@@ -70,25 +106,14 @@ void	display_exceeded_sequence(t_reply reply)
 	tmp_sockaddr.sin_addr = packet_content->ip_src;
 	tmp_sockaddr.sin_family = AF_INET;
 	tmp_sockaddr.sin_port = 0;
-	if (!(traceroute.flags & F_FLAG))
+	if (getnameinfo((struct sockaddr *)&tmp_sockaddr, sizeof(struct sockaddr_in),
+		hostname, sizeof(hostname), NULL, 0, NI_NAMEREQD) >= 0)
 	{
-		if (traceroute.flags & V_FLAG)
-			printf("ft_traceroute: TTL set to %d seems insufficient.\n", traceroute.ttl);
-		if (getnameinfo((struct sockaddr *)&tmp_sockaddr, sizeof(struct sockaddr_in),
-			hostname, sizeof(hostname), NULL, 0, NI_NAMEREQD) >= 0)
-		{
-			printf("From %s (%s): icmp_seq=%d Time to live exceeded\n", hostname, ip, traceroute.seq);
-		}
-		else
-		{
-			printf("From %s: icmp_seq=%d Time to live exceeded\n", ip, traceroute.seq);
-		}
+		printf("From %s (%s): icmp_seq=%d Time to live exceeded\n", hostname, ip, traceroute.seq);
 	}
 	else
 	{
-		ft_putchar('\b');
-		ft_putchar('E');
-		fflush(stdout);
+		printf("From %s: icmp_seq=%d Time to live exceeded\n", ip, traceroute.seq);
 	}
 }
 
