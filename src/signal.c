@@ -18,13 +18,13 @@ void	set_signals(void)
 /*
 ** function: handle_interrupt_signal
 ** ---------------------------------
-** the override function for the SIGINT (CTRL-C) signal. Displays the ending stats
-** before freeing the memory and leaving with exit code 0 as the program worked correctly
+** the override function for the SIGINT (CTRL-C) signal. Frees the memory before
+** leaving
 */
 
 void	handle_interrupt_signal(int signal)
 {
 	(void)signal;
 	free_memory();
-	exit(0);
+	exit(1);
 }

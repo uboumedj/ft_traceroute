@@ -65,6 +65,8 @@ int		main(int argc, char **argv)
 			display_header();
 			main_loop();
 		}
+		if (traceroute.flags & V_FLAG)
+			display_total_time();
 		free_memory();
 	}
 	return (0);

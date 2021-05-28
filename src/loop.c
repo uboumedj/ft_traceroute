@@ -11,14 +11,13 @@
 ** destination address, performing byte swaps on necessary parts for endianness compliance
 */
 
-void			initialise_packet(struct s_packet *packet, struct timeval current_time)
+void			initialise_packet(struct s_packet *packet)
 {
 	ft_bzero(packet, sizeof(t_packet));
 	packet->icmp_header.icmp_type = ICMP_ECHO;
 	packet->icmp_header.icmp_code = 0;
 	packet->icmp_header.icmp_seq = BSWAP16(traceroute.seq);
 	packet->icmp_header.icmp_id = BSWAP16(traceroute.process_id);
-	ft_memcpy(&packet->icmp_header.icmp_dun, &(current_time.tv_sec), sizeof(current_time.tv_sec));
 	packet->icmp_header.icmp_cksum = checksum(packet, sizeof(*packet));
 }
 
@@ -155,6 +154,7 @@ void			main_loop(void)
 			error_output_and_exit(SETSOCKOPT_ERROR);
 		traceroute.hops--;
 	}
+	save_current_time(&traceroute.ending_time);
 }
 
 /*
@@ -180,7 +180,7 @@ void			loop_single_hop(void)
 	while (count > 0)
 	{
 		save_current_time(&current_start_timestamp);
-		initialise_packet(&packet, current_start_timestamp);
+		initialise_packet(&packet);
 		check = send_packet(&packet);
 		if (check == SUCCESS_CODE)
 		{

@@ -68,7 +68,7 @@
 typedef struct				s_packet
 {
 	struct icmp				icmp_header;
-	char					data_buffer[36];
+	char					data_buffer[12];
 }							t_packet;
 
 typedef struct				s_reply
@@ -126,7 +126,7 @@ void						create_socket(void);
 
 void						main_loop(void);
 void						loop_single_hop(void);
-void						initialise_packet(struct s_packet *packet, struct timeval current_time);
+void						initialise_packet(struct s_packet *packet);
 char						send_packet(t_packet *packet);
 char						receive_reply(t_reply *reply);
 char						check_reply(t_reply *replys);
@@ -159,5 +159,6 @@ void						display_hop_address(t_reply reply);
 void						display_time(struct timeval start, struct timeval end);
 void						error_output(char *message);
 void						error_output_and_exit(char *message);
+void						display_total_time(void);
 
 #endif

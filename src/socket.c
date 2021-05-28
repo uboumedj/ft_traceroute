@@ -15,8 +15,8 @@ void	create_socket(void)
 	int				socket_fd;
 	struct timeval	timeout;
 
-	timeout.tv_sec = 1;
-	timeout.tv_usec = 0;
+	timeout.tv_sec = 0;
+	timeout.tv_usec = 500000;
 	if ((socket_fd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP)) == -1)
 		error_output_and_exit(SOCKET_ERROR);
 	if ((setsockopt(socket_fd, IPPROTO_IP, IP_TTL, &(traceroute.ttl), sizeof(traceroute.ttl))) == -1)

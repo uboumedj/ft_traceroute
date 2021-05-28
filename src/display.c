@@ -12,8 +12,8 @@
 
 void	display_header(void)
 {
-	printf("traceroute to %s (%s), %d hops max, 60 byte packets\n", traceroute.user_requested_address,
-		traceroute.address, traceroute.hops);
+	printf("traceroute to %s (%s), %d hops max, %lu byte packets\n", traceroute.user_requested_address,
+		traceroute.address, traceroute.hops, sizeof(t_packet) + 20);
 }
 
 /*
@@ -85,6 +85,20 @@ void	display_time(struct timeval start, struct timeval end)
 
 	elapsed_time = calculate_elapsed_time(start, end);
 	printf("  %.3lf ms", elapsed_time);
+}
+
+/*
+** function: display_total_time
+** ----------------------------
+** displays the program's total time if verbose mode is activated
+*/
+
+void	display_total_time(void)
+{
+	double	elapsed_time;
+
+	elapsed_time = calculate_elapsed_time(traceroute.starting_time, traceroute.ending_time);
+	printf("Program finished tracing the route to %s in %.0lf ms\n", traceroute.address, elapsed_time);
 }
 
 /*
