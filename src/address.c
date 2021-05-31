@@ -41,7 +41,7 @@ char	check_previous_argument(char **argv, int i)
 	i -= 1;
 	if (argv[i][0] != '-')
 		return (SUCCESS_CODE);
-	if (argv[i][1] != 'c' && argv[i][1] != 't' && argv[i][1] != 'i')
+	if (argv[i][1] != 'm' && argv[i][1] != 'q' && argv[i][1] != 'z' && argv[i][1] != 'f')
 		return (SUCCESS_CODE);
 	return (ERROR_CODE);
 }

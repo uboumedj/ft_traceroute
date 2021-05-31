@@ -34,7 +34,7 @@
 ** ERROR MESSAGE DEFINES
 */
 
-# define USAGE				"Usage: ft_traceroute [-h help] [-m max hops] [-f first ttl] [-q queries per hop] [-z interval between queries] destination"
+# define USAGE				"Usage:\tft_traceroute [-h help] [-m max hops] [-f first ttl]\n\t[-q queries per hop] [-z interval between queries] [-n no-hostname mode]\n\tdestination"
 # define BAD_FLAG_ERROR		"ft_traceroute: invalid option -- '%c'\n"
 # define BAD_TTL_ERROR		"ft_traceroute: can't set time to live: first hop out of range"
 # define BAD_COUNT_ERROR	"ft_traceroute: max hops cannot be more than 255"
